@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="pcb" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#173f60"/><stop offset="1" stop-color="#102438"/></linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#dce5ec"/><stop offset="1" stop-color="#8da3b4"/></linearGradient>
+    <filter id="shadow" x="-20%" y="-30%" width="140%" height="170%"><feDropShadow dx="0" dy="16" stdDeviation="15" flood-color="#18344d" flood-opacity=".22"/></filter>
+  </defs>
+  <rect width="640" height="360" rx="26" fill="#f1f5fa"/>
+  <circle cx="460" cy="100" r="115" fill="#dcebf2"/>
+  <g transform="rotate(-9 320 180)" filter="url(#shadow)">
+    <rect x="91" y="139" width="456" height="90" rx="11" fill="url(#pcb)"/>
+    <circle cx="121" cy="184" r="13" fill="#f1f5fa"/><circle cx="518" cy="184" r="13" fill="#f1f5fa"/>
+    <rect x="166" y="154" width="79" height="60" rx="6" fill="#263849"/>
+    <rect x="260" y="154" width="79" height="60" rx="6" fill="#263849"/>
+    <rect x="354" y="154" width="79" height="60" rx="6" fill="#263849"/>
+    <rect x="444" y="154" width="47" height="60" rx="6" fill="url(#metal)"/>
+    <path d="M101 229h31v22h-31zm42 0h31v22h-31zm42 0h31v22h-31zm42 0h31v22h-31zm42 0h31v22h-31zm42 0h31v22h-31zm42 0h31v22h-31z" fill="#ddb65d"/>
+    <text x="300" y="191" fill="#c6d6e0" font-family="Arial,sans-serif" font-size="15" font-weight="700" text-anchor="middle">NVMe · 1 TB</text>
+  </g>
+  <text x="320" y="314" fill="#6d8192" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3" text-anchor="middle">ARMAZENAMENTO DE ALTA VELOCIDADE</text>
+</svg>

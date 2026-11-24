@@ -1,0 +1,129 @@
+{% extends "base.html" %}
+{% block title %}Frente de caixa · TechStock Manager{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div><div class="eyebrow">PONTO DE VENDA · CHECKOUT</div><h1>Nova venda</h1><p>Monte o carrinho e confirme todos os itens em uma única transação.</p></div>
+  <div class="heading-actions"><a class="button button-secondary" href="{{ url_for('dashboard') }}">Voltar ao painel</a></div>
+</section>
+<form class="checkout-layout" method="post" action="{{ url_for('create_sale') }}" id="checkout-form">
+  <div class="checkout-main">
+    <section class="panel checkout-panel">
+      <div class="panel-heading"><div><h2>Dados do cliente e pagamento</h2><p>Informações registradas no comprovante.</p></div></div>
+      <div class="checkout-fields">
+        <label>Nome / razão social do cliente<input name="cliente_nome" required maxlength="160" placeholder="Nome completo ou empresa"></label>
+        <label>CPF / CNPJ<input name="cliente_documento" required maxlength="32" placeholder="Documento do cliente"></label>
+        <label class="field-wide">Forma de pagamento<select name="forma_pagamento" required><option value="">Selecione</option><option value="PIX">PIX</option><option value="CARTAO_CREDITO">Cartão de crédito</option><option value="BOLETO_FATURADO">Boleto faturado</option></select></label>
+      </div>
+    </section>
+    <section class="panel checkout-panel">
+      <div class="panel-heading"><div><h2>Produtos disponíveis</h2><p>Confira os detalhes do item; preço e saldo são validados novamente ao fechar a venda.</p></div><a class="text-link" href="{{ url_for('showroom') }}">Ver vitrine →</a></div>
+      <div class="cart-add-row">
+        <label class="cart-product-field">Produto / licença<select id="product-select"><option value="">Selecione um produto</option>{% for product in products %}<option value="{{ product.id }}" data-name="{{ product.name }}" data-sku="{{ product.sku }}" data-manufacturer="{{ product.manufacturer }}" data-description="{{ product.specification }}" data-license="{{ product.licensing_model or '' }}" data-type="{{ product.item_type }}" data-image="{% if product.has_image %}{{ url_for('product_image', product_id=product.id) }}{% elif product.sku in illustrations %}{{ url_for('static', filename=illustrations[product.sku]) }}{% endif %}" data-price="{{ '%.2f'|format(product.price) }}" data-stock="{{ product.stock }}" {% if selected_product_id == product.id %}selected{% endif %}>{{ product.name }} · {{ product.sku }} · {{ product.stock }} un. · {{ product.price|brl }}</option>{% endfor %}</select></label>
+        <label class="cart-quantity-field">Quantidade<input id="product-quantity" type="number" min="1" value="1" step="1"></label>
+        <button class="button button-secondary" type="button" id="add-item">Adicionar item</button>
+      </div>
+      <div class="selected-product-preview" id="selected-product-preview" hidden aria-live="polite"></div>
+      <div class="table-wrap">
+        <table class="cart-table"><thead><tr><th>ITEM</th><th>PREÇO UNITÁRIO</th><th>QUANTIDADE</th><th>SUBTOTAL</th><th></th></tr></thead><tbody id="cart-items"><tr><td class="empty-state" colspan="5">Seu carrinho está vazio.</td></tr></tbody></table>
+      </div>
+    </section>
+  </div>
+  <aside class="panel checkout-summary">
+    <div class="eyebrow">RESUMO DO PEDIDO</div>
+    <h2>Fechamento</h2>
+    <div class="summary-line"><span>Itens no carrinho</span><strong id="cart-count">0</strong></div>
+    <div class="summary-total"><span>Total da venda</span><strong id="cart-total">R$ 0,00</strong></div>
+    <input type="hidden" name="itens_json" id="cart-json" value="[]">
+    <button class="button button-primary checkout-submit" type="submit">Confirmar venda <span>→</span></button>
+    <p class="summary-note">A venda, os itens, a baixa de estoque e a auditoria são gravados juntos. Se algum saldo for insuficiente, nada será confirmado.</p>
+  </aside>
+</form>
+<script>
+(() => {
+  const select = document.getElementById("product-select");
+  const quantityInput = document.getElementById("product-quantity");
+  const tbody = document.getElementById("cart-items");
+  const cartJson = document.getElementById("cart-json");
+  const formatter = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  const cart = new Map();
+  const escapeHtml = (value) => {
+    const element = document.createElement("span");
+    element.textContent = value;
+    return element.innerHTML;
+  };
+  const render = () => {
+    const entries = Array.from(cart.values());
+    if (!entries.length) {
+      tbody.innerHTML = '<tr><td class="empty-state" colspan="5">Seu carrinho está vazio.</td></tr>';
+    } else {
+      tbody.innerHTML = entries.map((item) => `<tr>
+        <td><div class="cart-product-cell">${item.image ? `<img src="${escapeHtml(item.image)}" alt="">` : '<span class="cart-product-placeholder" aria-hidden="true">▣</span>'}<span><strong>${escapeHtml(item.name)}</strong><small class="cart-sku">${escapeHtml(item.sku)} · ${escapeHtml(item.manufacturer)} · ${escapeHtml(item.type)}</small><small class="cart-description">${escapeHtml(item.description)}${item.license ? ` · ${escapeHtml(item.license)}` : ""}</small></span></div></td>
+        <td>${formatter.format(item.price)}</td><td>${item.quantity}</td>
+        <td>${formatter.format(item.price * item.quantity)}</td>
+        <td><button class="delete-button" type="button" data-remove="${item.id}" aria-label="Remover ${escapeHtml(item.name)}">Remover</button></td>
+      </tr>`).join("");
+    }
+    const total = entries.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    document.getElementById("cart-count").textContent = String(entries.reduce((sum, item) => sum + item.quantity, 0));
+    document.getElementById("cart-total").textContent = formatter.format(total);
+    cartJson.value = JSON.stringify(entries.map(({ id, quantity }) => ({ produto_id: id, quantidade: quantity })));
+  };
+  const preview = document.getElementById("selected-product-preview");
+  const renderPreview = () => {
+    const option = select.selectedOptions[0];
+    if (!option.value) {
+      preview.hidden = true;
+      preview.innerHTML = "";
+      return;
+    }
+    preview.hidden = false;
+    preview.innerHTML = `${option.dataset.image ? `<img src="${escapeHtml(option.dataset.image)}" alt="Foto de ${escapeHtml(option.dataset.name)}">` : '<span class="preview-product-placeholder" aria-hidden="true">▣</span>'}
+      <span><strong>${escapeHtml(option.dataset.manufacturer)} · ${escapeHtml(option.dataset.type)}</strong>
+      <span>${escapeHtml(option.dataset.description)}${option.dataset.license ? ` · ${escapeHtml(option.dataset.license)}` : ""}</span>
+      <small>${option.dataset.stock} unidade(s) disponível(is) · ${formatter.format(Number(option.dataset.price))} por unidade</small></span>`;
+  };
+  select.addEventListener("change", renderPreview);
+  renderPreview();
+  document.getElementById("add-item").addEventListener("click", () => {
+    const option = select.selectedOptions[0];
+    const quantity = Number.parseInt(quantityInput.value, 10);
+    if (!option.value || !Number.isInteger(quantity) || quantity <= 0) return;
+    const id = Number.parseInt(option.value, 10);
+    const existing = cart.get(id);
+    const nextQuantity = (existing?.quantity || 0) + quantity;
+    if (nextQuantity > Number.parseInt(option.dataset.stock, 10)) {
+      window.alert(`Saldo disponível: ${option.dataset.stock} unidade(s).`);
+      return;
+    }
+    cart.set(id, {
+      id,
+      name: option.dataset.name,
+      sku: option.dataset.sku,
+      manufacturer: option.dataset.manufacturer,
+      description: option.dataset.description,
+      license: option.dataset.license,
+      image: option.dataset.image,
+      type: option.dataset.type,
+      price: Number(option.dataset.price),
+      quantity: nextQuantity
+    });
+    select.value = "";
+    quantityInput.value = "1";
+    render();
+  });
+  tbody.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-remove]");
+    if (button) {
+      cart.delete(Number.parseInt(button.dataset.remove, 10));
+      render();
+    }
+  });
+  document.getElementById("checkout-form").addEventListener("submit", (event) => {
+    if (cart.size === 0) {
+      event.preventDefault();
+      window.alert("Adicione ao menos um produto ao carrinho.");
+    }
+  });
+})();
+</script>
+{% endblock %}

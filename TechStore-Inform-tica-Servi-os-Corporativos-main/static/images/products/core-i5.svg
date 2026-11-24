@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 360">
+  <defs>
+    <linearGradient id="case" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#f9fcff"/><stop offset="1" stop-color="#b9c9d5"/></linearGradient>
+    <linearGradient id="center" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#fff"/><stop offset="1" stop-color="#e0e9ef"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feDropShadow dx="0" dy="18" stdDeviation="16" flood-color="#18344d" flood-opacity=".2"/></filter>
+  </defs>
+  <rect width="640" height="360" rx="26" fill="#f1f5fa"/>
+  <circle cx="465" cy="103" r="112" fill="#e2edf2"/>
+  <g transform="rotate(-8 320 180)" filter="url(#shadow)">
+    <rect x="205" y="72" width="230" height="216" rx="23" fill="url(#case)" stroke="#a9bac6" stroke-width="4"/>
+    <rect x="229" y="96" width="182" height="168" rx="14" fill="url(#center)" stroke="#c1cdd5" stroke-width="3"/>
+    <rect x="251" y="117" width="138" height="126" rx="10" fill="#29465c"/>
+    <text x="320" y="181" fill="#eff8fb" font-family="Arial,sans-serif" font-size="25" font-weight="700" text-anchor="middle">CORE</text>
+    <text x="320" y="213" fill="#8ad8d1" font-family="Arial,sans-serif" font-size="30" font-weight="700" text-anchor="middle">i5</text>
+    <g fill="#aebdca"><rect x="224" y="59" width="17" height="17" rx="4"/><rect x="267" y="59" width="17" height="17" rx="4"/><rect x="310" y="59" width="17" height="17" rx="4"/><rect x="353" y="59" width="17" height="17" rx="4"/><rect x="396" y="59" width="17" height="17" rx="4"/><rect x="224" y="284" width="17" height="17" rx="4"/><rect x="267" y="284" width="17" height="17" rx="4"/><rect x="310" y="284" width="17" height="17" rx="4"/><rect x="353" y="284" width="17" height="17" rx="4"/><rect x="396" y="284" width="17" height="17" rx="4"/></g>
+  </g>
+  <text x="320" y="330" fill="#6d8192" font-family="Arial,sans-serif" font-size="15" font-weight="700" letter-spacing="3" text-anchor="middle">PROCESSADOR PARA SUA OPERAÇÃO</text>
+</svg>

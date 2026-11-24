@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Vendas e faturamento · TechStock Manager{% endblock %}
+{% block content %}
+<section class="page-heading heading-row">
+  <div><div class="eyebrow">GESTÃO · RELATÓRIO FINANCEIRO</div><h1>Vendas e faturamento</h1><p>Histórico de pedidos, situação e operador responsável.</p></div>
+  <div class="heading-actions"><a class="button button-primary" href="{{ url_for('new_sale') }}">＋ Nova venda</a></div>
+</section>
+<section class="stats-grid sales-stats">
+  <article class="stat-card"><div class="stat-top"><span>Vendas concluídas</span><span class="stat-icon icon-blue">▤</span></div><strong>{{ summary.sale_count }}</strong><small>transações faturadas</small></article>
+  <article class="stat-card"><div class="stat-top"><span>Faturamento bruto</span><span class="stat-icon icon-green">R$</span></div><strong>R$ {{ '%.2f'|format(summary.revenue)|replace('.', ',') }}</strong><small>somente vendas concluídas</small></article>
+  <article class="stat-card"><div class="stat-top"><span>Registros históricos</span><span class="stat-icon icon-orange">↻</span></div><strong>{{ sales|length }}</strong><small>inclui vendas canceladas</small></article>
+</section>
+<section class="panel">
+  <div class="panel-heading"><div><h2>Histórico de pedidos</h2><p>Abra um comprovante ou cancele uma transação concluída.</p></div><span class="record-count">{{ sales|length }} pedidos</span></div>
+  <div class="table-wrap"><table class="sales-table"><thead><tr><th>PEDIDO</th><th>CLIENTE</th><th>DATA</th><th>OPERADOR</th><th>PAGAMENTO</th><th>TOTAL</th><th>STATUS / AÇÃO</th></tr></thead><tbody>
+    {% for sale in sales %}
+    <tr><td><a class="text-link" href="{{ url_for('sale_detail', sale_id=sale.id) }}">{{ sale.numero_pedido }}</a></td><td>{{ sale.cliente_nome }}<small class="cart-sku">{{ sale.cliente_documento }}</small></td><td>{{ sale.data_hora }}</td><td>{{ sale.operador_nome }}</td><td>{{ {'PIX': 'PIX', 'CARTAO_CREDITO': 'Cartão', 'BOLETO_FATURADO': 'Boleto'}[sale.forma_pagamento] }}</td><td>R$ {{ '%.2f'|format(sale.valor_total)|replace('.', ',') }}</td><td><span class="sale-status status-{{ sale.status_venda|lower }}">{{ 'Concluída' if sale.status_venda == 'CONCLUIDA' else 'Cancelada' }}</span>{% if sale.status_venda == 'CONCLUIDA' %}<form method="post" action="{{ url_for('cancel_sale', sale_id=sale.id) }}" onsubmit="return confirm('Cancelar este pedido e estornar os itens ao estoque?');"><button class="delete-button" type="submit">Cancelar venda</button></form>{% endif %}</td></tr>
+    {% else %}<tr><td class="empty-state" colspan="7">Nenhuma venda registrada.</td></tr>{% endfor %}
+  </tbody></table></div>
+</section>
+{% endblock %}

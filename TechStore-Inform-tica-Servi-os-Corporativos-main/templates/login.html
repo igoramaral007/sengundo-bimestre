@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Entrar · TechStock Manager{% endblock %}
+{% block content %}
+<section class="login-layout">
+  <div class="login-card">
+    <span class="brand-mark login-mark">T</span>
+    <div class="eyebrow">TECHSTORE · ACESSO OPERACIONAL</div>
+    <h1>Entre no TechStock</h1>
+    <p>Acesse a operação com sua conta corporativa.</p>
+    <form method="post" action="{{ url_for('authenticate') }}" class="login-form">
+      <input type="hidden" name="next" value="{{ request.args.get('next', '') }}">
+      <label>E-mail corporativo<input type="email" name="email" value="{{ email|default('') }}" autocomplete="username" required autofocus></label>
+      <label>Senha<input type="password" name="password" autocomplete="current-password" required></label>
+      <button class="button button-primary" type="submit">Entrar com segurança <span>→</span></button>
+    </form>
+    <div class="login-help"><strong>Contas para avaliação</strong><span>operador@techstore.com · Operador123!</span><span>gerente@techstore.com · Gerente123!</span></div>
+  </div>
+</section>
+{% endblock %}

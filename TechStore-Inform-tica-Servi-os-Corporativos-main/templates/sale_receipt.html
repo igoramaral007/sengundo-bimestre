@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Recibo {{ sale.numero_pedido }} · TechStock Manager{% endblock %}
+{% block content %}
+<section class="page-heading heading-row no-print">
+  <div><div class="eyebrow">COMPROVANTE DE FATURAMENTO</div><h1>Detalhe da venda</h1><p>Documento de conferência da transação registrada.</p></div>
+  <div class="heading-actions"><button class="button button-secondary" type="button" onclick="window.print()">Imprimir recibo</button><a class="button button-primary" href="{{ url_for('new_sale') }}">Nova venda</a></div>
+</section>
+<article class="receipt">
+  <header class="receipt-header">
+    <div><div class="receipt-brand-mark">T</div><div><h1>TechStore</h1><p>Informática &amp; Serviços Corporativos</p></div></div>
+    <div class="receipt-status status-{{ sale.status_venda|lower }}">{{ 'VENDA CONCLUÍDA' if sale.status_venda == 'CONCLUIDA' else 'VENDA CANCELADA' }}</div>
+  </header>
+  <div class="receipt-order"><div><span>ORDEM DE FATURAMENTO</span><strong>{{ sale.numero_pedido }}</strong></div><div><span>DATA E HORA</span><strong>{{ sale.data_hora }}</strong></div></div>
+  {% if sale.status_venda == 'CANCELADA' %}<div class="receipt-cancelled">Esta venda foi cancelada. O documento é mantido para consulta e rastreabilidade.</div>{% endif %}
+  <section class="receipt-parties">
+    <div><span>CLIENTE</span><strong>{{ sale.cliente_nome }}</strong><small>CPF/CNPJ: {{ sale.cliente_documento }}</small></div>
+    <div><span>OPERADOR RESPONSÁVEL</span><strong>{{ sale.operador_nome }}</strong><small>Pagamento: {{ {'PIX': 'PIX', 'CARTAO_CREDITO': 'Cartão de crédito', 'BOLETO_FATURADO': 'Boleto faturado'}[sale.forma_pagamento] }}</small></div>
+  </section>
+  <div class="table-wrap">
+    <table class="receipt-table"><thead><tr><th>DESCRIÇÃO</th><th>TIPO</th><th>QTD.</th><th>VALOR UNITÁRIO</th><th>SUBTOTAL</th></tr></thead><tbody>
+      {% for item in items %}
+      <tr><td><strong>{{ item.name }}</strong><small>{{ item.sku }}</small></td><td><span class="item-type-badge {% if item.item_type == 'Software' %}badge-license{% else %}badge-physical{% endif %}">{{ 'Licença digital' if item.item_type == 'Software' else 'Componente físico' }}</span></td><td>{{ item.quantidade_vendida }}</td><td>R$ {{ '%.2f'|format(item.preco_unitario_praticado)|replace('.', ',') }}</td><td>R$ {{ '%.2f'|format(item.subtotal_item)|replace('.', ',') }}</td></tr>
+      {% endfor %}
+    </tbody></table>
+  </div>
+  <div class="receipt-total"><span>TOTAL DA VENDA</span><strong>R$ {{ '%.2f'|format(sale.valor_total)|replace('.', ',') }}</strong></div>
+  <footer class="receipt-auth"><span>Chave de autenticidade</span><strong>{{ sale.chave_autenticidade }}</strong><small>Operação registrada no TechStock Manager. Guarde este identificador para consulta.</small></footer>
+</article>
+{% endblock %}

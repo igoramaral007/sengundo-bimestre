@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% block title %}Vitrine de produtos · TechStore{% endblock %}
+{% block content %}
+<section class="showroom-hero">
+  <div class="showroom-hero-copy">
+    <div class="eyebrow">TECHSTORE · TECNOLOGIA PARA SUA EMPRESA</div>
+    <h1>Encontre a solução certa para o seu negócio.</h1>
+    <p>Explore nosso catálogo de hardware, periféricos e licenças digitais. Compare especificações e disponibilidade antes de fechar seu pedido.</p>
+    {% if current_user %}<a class="button button-light" href="{{ url_for('new_sale') }}">Começar uma compra <span>→</span></a>{% else %}<a class="button button-light" href="{{ url_for('login', next=url_for('new_sale')) }}">Falar com a equipe de vendas <span>→</span></a>{% endif %}
+  </div>
+  <div class="showroom-hero-art" aria-hidden="true">
+    <span class="hero-orbit orbit-one"></span><span class="hero-orbit orbit-two"></span>
+    <span class="hero-device">T<span>+</span></span>
+    <span class="hero-spark spark-one">✦</span><span class="hero-spark spark-two">✧</span>
+  </div>
+</section>
+
+<section class="showroom-section">
+  <div class="showroom-heading">
+    <div><div class="eyebrow">CATÁLOGO ATUALIZADO</div><h2>Produtos em destaque</h2><p>Especificações claras e disponibilidade consultada em tempo real.</p></div>
+    <span class="record-count">{{ products|length }} produtos</span>
+  </div>
+  <div class="showroom-tools">
+    <label class="showroom-search"><span aria-hidden="true">⌕</span><input id="product-search" type="search" placeholder="Buscar por produto, marca ou especificação" aria-label="Buscar produtos"></label>
+    <div class="showroom-filters" role="group" aria-label="Filtrar por tipo de produto">
+      <button class="filter-chip active" type="button" data-filter="all" aria-pressed="true">Todos</button>
+      <button class="filter-chip" type="button" data-filter="Hardware" aria-pressed="false">Hardware</button>
+      <button class="filter-chip" type="button" data-filter="Periférico" aria-pressed="false">Periféricos</button>
+      <button class="filter-chip" type="button" data-filter="Software" aria-pressed="false">Licenças digitais</button>
+    </div>
+  </div>
+  <div class="showroom-grid" id="showroom-grid">
+    {% for product in products %}
+    <article class="product-card" data-type="{{ product.item_type }}" data-search="{{ product.name }} {{ product.manufacturer }} {{ product.sku }} {{ product.specification }} {{ product.category_name }} {{ product.licensing_model or '' }}">
+      <div class="product-visual {% if product.item_type == 'Software' %}visual-software{% elif product.item_type == 'Periférico' %}visual-peripheral{% else %}visual-hardware{% endif %}">
+        <span class="item-type-badge">{% if product.item_type == 'Software' %}LICENÇA DIGITAL{% elif product.item_type == 'Periférico' %}PERIFÉRICO{% else %}HARDWARE{% endif %}</span>
+        {% if product.has_image %}
+        <img class="product-photo" src="{{ url_for('product_image', product_id=product.id) }}" alt="Foto de {{ product.name }}" loading="lazy">
+        {% elif product.sku in illustrations %}
+        <img class="product-photo product-illustration" src="{{ url_for('static', filename=illustrations[product.sku]) }}" alt="Ilustração de {{ product.name }}" loading="lazy">
+        {% else %}
+        <span class="product-glyph" aria-hidden="true">{% if product.item_type == 'Software' %}⌘{% elif product.item_type == 'Periférico' %}◉{% else %}▤{% endif %}</span>
+        {% endif %}
+        <span class="product-category">{{ product.category_name }}</span>
+      </div>
+      <div class="product-card-body">
+        <div class="product-maker">{{ product.manufacturer }} <span>·</span> {{ product.sku }}</div>
+        <h3>{{ product.name }}</h3>
+        <p class="product-specification">{{ product.specification }}</p>
+        {% if product.licensing_model %}<div class="license-detail">▣ &nbsp;{{ product.licensing_model }}</div>{% endif %}
+        <div class="product-availability {% if product.stock <= product.min_stock %}availability-low{% endif %}">
+          <span class="availability-dot"></span>
+          {% if product.stock <= product.min_stock %}Estoque baixo · {{ product.stock }} disponível(is){% else %}{{ product.stock }} unidade(s) disponível(is){% endif %}
+        </div>
+        <div class="product-card-footer">
+          <div class="product-price"><small>PREÇO UNITÁRIO</small><strong>{{ product.price|brl }}</strong></div>
+          {% if product.stock > 0 %}{% if current_user %}<a class="button button-primary product-buy" href="{{ url_for('new_sale', produto_id=product.id) }}">Adicionar à venda <span>→</span></a>{% else %}<a class="button button-primary product-buy" href="{{ url_for('login', next=url_for('new_sale', produto_id=product.id)) }}">Consultar compra <span>→</span></a>{% endif %}{% else %}<span class="button button-disabled" aria-disabled="true">Indisponível</span>{% endif %}
+        </div>
+        {% if current_user.perfil_acesso == 'GERENTE' %}
+        <form class="product-image-form" method="post" action="{{ url_for('update_product_image', product_id=product.id) }}" enctype="multipart/form-data">
+          <label><span>{% if product.has_image %}Trocar foto{% else %}Adicionar foto{% endif %}</span><input type="file" name="image" accept="image/jpeg,image/png,image/webp" required></label>
+          <button class="button button-secondary" type="submit">Salvar</button>
+          <small>JPG, PNG ou WebP · máx. 5 MB</small>
+        </form>
+        {% endif %}
+      </div>
+    </article>
+    {% else %}
+    <div class="showroom-empty"><span>▣</span><h3>Estamos preparando nosso catálogo</h3><p>Os produtos disponíveis aparecerão aqui em breve.</p></div>
+    {% endfor %}
+  </div>
+  <p class="showroom-no-results" id="showroom-no-results" hidden>Nenhum produto encontrado. Tente outro termo ou filtro.</p>
+</section>
+<script>
+(() => {
+  const cards = Array.from(document.querySelectorAll(".product-card"));
+  const search = document.getElementById("product-search");
+  const filters = Array.from(document.querySelectorAll(".filter-chip"));
+  const noResults = document.getElementById("showroom-no-results");
+  let activeFilter = "all";
+  const updateProducts = () => {
+    const term = search.value.trim().toLocaleLowerCase("pt-BR");
+    let visibleCount = 0;
+    cards.forEach((card) => {
+      const matchesType = activeFilter === "all" || card.dataset.type === activeFilter;
+      const matchesSearch = card.dataset.search.toLocaleLowerCase("pt-BR").includes(term);
+      card.hidden = !(matchesType && matchesSearch);
+      if (!card.hidden) visibleCount += 1;
+    });
+    noResults.hidden = visibleCount > 0 || cards.length === 0;
+  };
+  search.addEventListener("input", updateProducts);
+  filters.forEach((button) => button.addEventListener("click", () => {
+    activeFilter = button.dataset.filter;
+    filters.forEach((filter) => {
+      const isActive = filter === button;
+      filter.classList.toggle("active", isActive);
+      filter.setAttribute("aria-pressed", String(isActive));
+    });
+    updateProducts();
+  }));
+})();
+</script>
+{% endblock %}
